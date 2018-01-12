@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<title>SheetJS Live Demo</title>
+	</head>
+	<body>
+		<input type="file" name="xlfile" id="xlf" /> ... or click here to select a file
+		<script src="shim.js"></script>
+		<script src="jszip.js"></script>
+		<script src="xlsx.js"></script>
+		<script>
+			var X = XLSX;
+			var rABS = false;
+			var process_wb = function process_wb(wb) {
+				var result = {};
+				wb.SheetNames.forEach(function(sheetName) {
+					var roa = X.utils.sheet_to_json(wb.Sheets[sheetName], {
+						header: 1
+					});
+					if(roa.length) result[sheetName] = roa;
+				});
+				var output = JSON.stringify(result, 2, 2);
+				console.log(JSON.parse(output));
+				
+				document.write(output);
+				
+			};
+			var do_file = function do_file(files) {
+				var f = files[0];
+				var reader = new FileReader();
+				reader.onload = function(e) {
+					if(typeof console !== 'undefined') console.log("onload", new Date(), rABS);
+					var data = e.target.result;
+					if(!rABS){
+						data = new Uint8Array(data)
+					}
+					process_wb(X.read(data, {
+						type: rABS ? 'binary' : 'array'
+					}));
+				};
+				if(rABS){
+					reader.readAsBinaryString(f);
+				}else{
+					reader.readAsArrayBuffer(f);
+				}
+			};
+			(function() {
+				var xlf = document.getElementById('xlf');
+				if(!xlf.addEventListener) return;
+				function handleFile(e) {
+					console.log(e.target.files);
+					// 获取到文件
+					do_file(e.target.files);
+				}
+				xlf.addEventListener('change', handleFile, false);
+			})();
+		</script>
+	</body>
+
+</html>
